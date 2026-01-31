@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gym Check-in</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #667eea;
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .upload-area {
+      border: 3px dashed #667eea;
+      border-radius: 15px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #f8f9ff;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-area:hover {
+      border-color: #764ba2;
+      background: #f0f2ff;
+      transform: translateY(-2px);
+    }
+
+    .upload-area.has-image {
+      border-color: #10b981;
+      background: #f0fdf4;
+      padding: 10px;
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .upload-text {
+      color: #667eea;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .upload-hint {
+      color: #999;
+      font-size: 13px;
+    }
+
+    #file {
+      display: none;
+    }
+
+    #preview {
+      width: 100%;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #preview.show {
+      display: block;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .notification {
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      display: none;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .notification.show {
+      display: block;
+    }
+
+    .notification-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .notification-error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .notification-loading {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+    }
+
+    .notification-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .notification-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .notification-icon {
+      font-size: 32px;
+    }
+
+    .notification-body {
+      font-size: 15px;
+      line-height: 1.5;
+      opacity: 0.95;
+    }
+
+    .welcome-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <span>💪</span>
+        Check-in Gimnasio
+      </h1>
+      <p>Captura tu foto para registrar tu entrada</p>
+    </div>
+
+    <label for="file" class="upload-area" id="uploadArea">
+      <div id="uploadContent">
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">Toca para tomar foto</div>
+        <div class="upload-hint">O selecciona una imagen</div>
+      </div>
+      <img id="preview" alt="preview" />
+    </label>
+
+    <input id="file" type="file" accept="image/*" capture="environment" />
+
+    <button id="send" disabled>
+      <span id="btnIcon">📤</span>
+      <span id="btnText">Enviar Check-in</span>
+    </button>
+
+    <div id="notification" class="notification"></div>
+  </div>
+
+  <script>
+    const LA_URL = "https://prod-04.swedencentral.logic.azure.com:443/workflows/9a6c42b13c4542b788b1dc28da3372b5/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=tigD71zv5RnExEPr1uiQYDXaXx1P85nlQqT9Gy24bv4";
+
+    const fileInput = document.getElementById("file");
+    const preview = document.getElementById("preview");
+    const sendBtn = document.getElementById("send");
+    const btnIcon = document.getElementById("btnIcon");
+    const btnText = document.getElementById("btnText");
+    const notification = document.getElementById("notification");
+    const uploadArea = document.getElementById("uploadArea");
+    const uploadContent = document.getElementById("uploadContent");
+
+    let base64 = null;
+
+    function showNotification(type, title, message) {
+      notification.className = `notification notification-${type} show`;
+      
+      const icons = {
+        success: '✅',
+        error: '❌',
+        loading: '⏳',
+        warning: '⚠️'
+      };
+
+      notification.innerHTML = `
+        <div class="notification-header">
+          <span class="notification-icon">${icons[type]}</span>
+          <span>${title}</span>
+        </div>
+        <div class="notification-body">${message}</div>
+      `;
+    }
+
+    function hideNotification() {
+      notification.classList.remove('show');
+    }
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      // Preview
+      preview.src = URL.createObjectURL(file);
+      preview.classList.add('show');
+      uploadArea.classList.add('has-image');
+      uploadContent.style.display = 'none';
+
+      // Convert to base64
+      const dataUrl = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+
+      base64 = String(dataUrl).split(",")[1];
+      sendBtn.disabled = false;
+      
+      showNotification('success', 'Imagen cargada', 'Lista para enviar el check-in');
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      if (!base64) return;
+
+      // Loading state
+      sendBtn.disabled = true;
+      btnIcon.innerHTML = '<div class="spinner"></div>';
+      btnText.textContent = 'Enviando...';
+      showNotification('loading', 'Procesando', 'Verificando tu identidad...');
+
+      try {
+        const resp = await fetch(LA_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ foto: base64 })
+        });
+
+        const text = await resp.text();
+        
+        if (resp.status === 200) {
+          // Intentar parsear la respuesta como JSON
+          try {
+            const data = JSON.parse(text);
+            const nombre = data.nombre || data.name || data.Nombre || data.Name || 'Socio';
+            
+            showNotification('success', '¡Bienvenido/a!', 
+              `<div class="welcome-name">${nombre}</div>Check-in registrado correctamente`);
+          } catch {
+            // Si no es JSON, usar el texto tal cual
+            showNotification('success', '¡Bienvenido/a!', 
+              `<div class="welcome-name">${text}</div>Check-in registrado correctamente`);
+          }
+          
+          // Reset después de 3 segundos
+          setTimeout(() => {
+            base64 = null;
+            preview.classList.remove('show');
+            preview.src = '';
+            uploadArea.classList.remove('has-image');
+            uploadContent.style.display = 'block';
+            fileInput.value = '';
+            hideNotification();
+          }, 3000);
+          
+        } else if (resp.status === 404 || resp.status === 401 || resp.status === 403) {
+          showNotification('error', 'No reconocido', 
+            'No se pudo reconocer al socio. Por favor, intenta de nuevo con mejor iluminación.');
+        } else if (resp.status >= 500) {
+          showNotification('error', 'Error del servidor', 
+            'Hubo un problema en el sistema. Por favor, contacta con recepción.');
+        } else {
+          showNotification('warning', `Error ${resp.status}`, 
+            text || 'Ocurrió un error inesperado. Intenta de nuevo.');
+        }
+
+      } catch (e) {
+        showNotification('error', 'Error de conexión', 
+          'No se pudo conectar con el servidor. Verifica tu conexión a internet.');
+      } finally {
+        // Restore button
+        btnIcon.textContent = '📤';
+        btnText.textContent = 'Enviar Check-in';
+        sendBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
