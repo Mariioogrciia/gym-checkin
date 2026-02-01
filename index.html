@@ -378,9 +378,19 @@
         const text = await resp.text();
 
         if (resp.status === 200) {
-          showStatus('success', '¡Check-in exitoso!', 'Tu entrada ha sido registrada correctamente.', {
+          // Intentar parsear la respuesta como JSON para obtener el nombre
+          let nombre = 'Socio';
+          try {
+            const data = JSON.parse(text);
+            nombre = data.nombre || data.name || data.Nombre || data.Name || text || 'Socio';
+          } catch {
+            // Si no es JSON, usar el texto como nombre
+            nombre = text || 'Socio';
+          }
+          
+          showStatus('success', '¡Bienvenido/a!', `<strong style="font-size: 1.3rem; display: block; margin: 8px 0;">${nombre}</strong>Check-in registrado correctamente.`, {
             type: 'success',
-            text: `Estado: ${resp.status} OK`
+            text: '✓ Registrado'
           });
           btnText.textContent = "✓ Enviado";
           
@@ -394,7 +404,7 @@
             statusBox.classList.add("hidden");
           }, 3000);
         } else if (resp.status >= 400 && resp.status < 500) {
-          showStatus('error', 'Error en la solicitud', `Código de estado: ${resp.status}. ${text || 'Verifica los datos enviados.'}`, {
+          showStatus('error', 'No se reconoció al socio', 'No se pudo identificar tu rostro. Por favor, intenta de nuevo con mejor iluminación o acércate a recepción.', {
             type: 'error',
             text: `Error ${resp.status}`
           });
@@ -427,4 +437,3 @@
   </script>
 </body>
 </html>
-
